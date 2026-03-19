@@ -1,0 +1,24 @@
+# secrets
+backend/.env
+frontend/.env.local
+backend/credentials/
+backend/credentials/*.json
+
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+
+# Node / Next
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# runtime / generated data
+backend/data/
+backend/uploads/
+backend/tmp/
+
+# macOS
+.DS_Store
+__MACOSX/

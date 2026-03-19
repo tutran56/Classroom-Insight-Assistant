@@ -1,0 +1,164 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"\;
+
+async function fetchJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+export type SessionItem = {
+  id: number;
+  class_name: string;
+  session_key: string;
+  annotated_video_path?: string | null;
+  events_csv_path?: string | null;
+  segments_csv_path?: string | null;
+  result_json_path?: string | null;
+  created_at?: string | null;
+};
+
+export type SessionListResponse = {
+  items: SessionItem[];
+  total: number;
+};
+
+export type BehaviorDistributionItem = {
+  label: string;
+  count: number;
+};
+
+export type BehaviorDistributionResponse = {
+  session_id: number;
+  class_name: string;
+  total_events: number;
+  positive_count: number;
+  negative_count: number;
+  positive_ratio: number;
+  negative_ratio: number;
+  items: BehaviorDistributionItem[];
+};
+
+export type TopPhoneWindowResponse = {
+  session_id: number;
+  class_name: string;
+  window_sec: number;
+  window_start_sec: number;
+  window_end_sec: number;
+  distinct_target_count: number;
+  event_count: number;
+  target_ids: number[];
+  label: string;
+};
+
+export type TopNegativeWindowResponse = {
+  session_id: number;
+  class_name: string;
+  window_sec: number;
+  window_start_sec: number;
+  window_end_sec: number;
+  negative_score: number;
+  breakdown: {
+    using_phone: number;
+    sleeping: number;
+    turning: number;
+  };
+};
+
+export type BehaviorSegmentItem = {
+  id: number;
+  session_id: number;
+  segment_id: string;
+  target_id: number;
+  label: string;
+  start_time_sec: number;
+  end_time_sec: number;
+  duration_sec?: number | null;
+  peak_conf?: number | null;
+  mean_conf?: number | null;
+  clip_start_sec?: number | null;
+  clip_end_sec?: number | null;
+  clip_path?: string | null;
+  telegram_ready: boolean;
+  telegram_sent: boolean;
+  telegram_sent_at?: string | null;
+  created_at?: string | null;
+};
+
+export type BehaviorSegmentListResponse = {
+  session_id: number;
+  class_name: string;
+  items: BehaviorSegmentItem[];
+  total: number;
+};
+
+export type TelegramLogItem = {
+  id: number;
+  session_id: number;
+  segment_id?: string | null;
+  target_id?: number | null;
+  label?: string | null;
+  clip_path?: string | null;
+  status?: string | null;
+  message?: string | null;
+  sent_at?: string | null;
+};
+
+export type TelegramLogListResponse = {
+  session_id: number;
+  class_name: string;
+  items: TelegramLogItem[];
+  total: number;
+};
+
+export type AICommentaryResponse = {
+  session_id: number;
+  class_name: string;
+  overall_sentiment: string;
+  summary_text: string;
+  highlights: string[];
+  suggestion: string;
+  input_stats: Record<string, unknown>;
+  fallback_reason?: string | null;
+};
+
+export function getValidClasses() {
+  return fetchJson<SessionListResponse>("/classes-db/valid");
+}
+
+export function getBehaviorDistribution(sessionId: number) {
+  return fetchJson<BehaviorDistributionResponse>(`/classes-db/${sessionId}/behavior-distribution`);
+}
+
+export function getTopPhoneWindow(sessionId: number, windowSec = 5) {
+  return fetchJson<TopPhoneWindowResponse>(`/classes-db/${sessionId}/top-phone-window?window_sec=${windowSec}`);
+}
+
+export function getTopNegativeWindow(sessionId: number, windowSec = 5) {
+  return fetchJson<TopNegativeWindowResponse>(`/classes-db/${sessionId}/top-negative-window?window_sec=${windowSec}`);
+}
+
+export function getSegments(sessionId: number) {
+  return fetchJson<BehaviorSegmentListResponse>(`/classes-db/${sessionId}/segments`);
+}
+
+export function getTelegramLogs(sessionId: number) {
+  return fetchJson<TelegramLogListResponse>(`/classes-db/${sessionId}/telegram-logs`);
+}
+
+export function getAICommentary(sessionId: number) {
+  return fetchJson<AICommentaryResponse>(`/classes-db/${sessionId}/ai-commentary`);
+}
+
+export function toBackendAssetUrl(path?: string | null) {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_BASE_URL}${path}`;
+}
+ 
